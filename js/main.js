@@ -1,63 +1,44 @@
-console.log("Hello world");
-let data, timelineCircles;
-
-d3.csv('data/disasters.csv')
-  .then(_data => {
-  	console.log('Data loading complete. Work with dataset.');
-  	data = _data;
-    console.log(data);
-
-    //process the data - this is a forEach function.  You could also do a regular for loop.... 
-    data.forEach(d => { //ARROW function - for each object in the array, pass it as a parameter to this function
-      	d.cost = +d.cost; // convert string 'cost' to number
-      	d.daysFromYrStart = computeDays(d.start); //note- I just created this field in each object in the array on the fly
-
-				let tokens = d.start.split("-");
-  			d.year = +tokens[0];
-
-  	});
-
-  	// Create an instance (for example in main.js)
-		timelineCircles = new TimelineCircles({
-			'parentElement': '#timeline',
-			'containerHeight': 1100,
-			'containerWidth': 1000
-		}, data);
-
-})
-.catch(error => {
-    console.error('Error:');
-    console.log(error);
-});
-
-
 /**
- * Event listener: use color legend as filter
+ * Load TopoJSON data of the world and the data of the world wonders
  */
-d3.selectAll('.legend-btn').on('click', function() {
-  console.log("button! ");
-  // Toggle 'inactive' class
-  d3.select(this).classed('inactive', !d3.select(this).classed('inactive'));
-  
-  // Check which categories are active
-  let selectedCategory = [];
-  d3.selectAll('.legend-btn:not(.inactive)').each(function() {
-    selectedCategory.push(d3.select(this).attr('category'));
+
+Promise.all([
+  d3.json('data/counties-10m.json'),
+  d3.csv('data/People.csv'),
+  d3.csv('data/Veterans.csv')
+]).then(data => {
+  const geoData = data[0];
+  const peopleData = data[1];
+  const veteransData = data[2];
+
+  // Combine both datasets by adding the population density to the TopoJSON file
+  console.log(geoData);
+  const peopleDataMap = new Map();
+  peopleData.forEach(d => {
+    if (d.Attribute === "OwnHomePct") {
+      peopleDataMap.set(d.FIPS.padStart(5, '0'), +d.Value);
+    }
   });
 
-  // Filter data accordingly and update vis
-  timelineCircles.data = data.filter(d => selectedCategory.includes(d.category)) ;
-  timelineCircles.updateVis();
+  const veteransDataMap = new Map();
+  veteransData.forEach(d => {
+    if (d.Attribute === "Vets18OPct") {
+      veteransDataMap.set(d.FIPS.padStart(5, '0'), +d.Value);
+    }
+  });
 
-});
+  geoData.objects.counties.geometries.forEach(d => {
+    const fips = d.id.padStart(5, '0');
+    d.properties.ownhome = peopleDataMap.get(fips) || 0;
+    d.properties.pctVeterans = veteransDataMap.get(fips) || 0;
+  });
+      
+  const choroplethMap = new ChoroplethMap({ 
+    parentElement: '.viz',   
+  }, geoData);
+  const choroplethMap_vets = new ChoroplethMap_vets({ 
+    parentElement: '.viz_vets',   
+  }, geoData);
 
-function computeDays(disasterDate){
-  	let tokens = disasterDate.split("-");
-
-  	let year = +tokens[0];
-  	let month = +tokens[1];
-  	let day = +tokens[2];
-
-    return (Date.UTC(year, month-1, day) - Date.UTC(year, 0, 0)) / 24 / 60 / 60 / 1000 ;
-
-  }
+})
+.catch(error => console.error(error));
