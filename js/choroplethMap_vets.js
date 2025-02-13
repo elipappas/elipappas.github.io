@@ -93,28 +93,23 @@ class ChoroplethMap_vets {
                         }
                       });
   
-        vis.counties
-                  .on('mousemove', (d,event) => {
-                    console.log(d);
-                    console.log(event);
-                      const pctVeterans = d.properties.pctVeterans ? `<strong>${d.properties.pctVeterans.toFixed(2)}</strong>% veterans` : 'No data available'; 
-                      const tooltip = d3.select('#tooltip_vets')
-                        .style('display', 'block')
-                        .style('left', (event.pageX + vis.config.tooltipPadding) + 'px')   
-                        .style('top', (event.pageY + vis.config.tooltipPadding) + 'px')
-                        .html(`
-                          <div class="tooltip-title_vets">${d.properties.name}</div>
-                          <div>${pctVeterans}</div>
-                        `);
-                    
-                        const tooltipWidth = tooltip.node().getBoundingClientRect().width;
-                        const fontSize = Math.max(12, Math.min(20, tooltipWidth / 10));
-                        tooltip.style('font-size', fontSize + 'px');
-                        tooltip.select('.tooltip-title_vets').style('font-size', (fontSize + 2) + 'px');
-                    })
-                    .on('mouseleave', () => {
-                      d3.select('#tooltip_vets').style('display', 'none');
-                    });
+      vis.counties
+        .on('mousemove', (d,event) => {
+          console.log(d);
+          console.log(event);
+            const areVets = d.properties.pctVeterans ? `<strong>${d.properties.pctVeterans.toFixed(2)}</strong>% are veterans` : 'No data available'; 
+            d3.select('#tooltip-vets')
+              .style('display', 'block')
+              .style('left', (event.pageX + vis.config.tooltipPadding) + 'px')
+              .style('top', (event.pageY + vis.config.tooltipPadding) + 'px')
+              .html(`
+              <div class="tooltip-vets-title">${d.properties.name}</div>
+              <div>${areVets}</div>
+              `);
+          })
+        .on('mouseleave', () => {
+          d3.select('#tooltip-vets').style('display', 'none');
+        });
   
   
   

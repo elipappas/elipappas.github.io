@@ -11,11 +11,7 @@ class ChoroplethMap {
     containerWidth: window.innerWidth / 2, // Set width to half the screen width
     containerHeight: _config.containerHeight || 500,
     margin: _config.margin || {top: 10, right: 10, bottom: 10, left: 10},
-    tooltipPadding: 10,
-    legendBottom: 50,
-    legendLeft: 50,
-    legendRectHeight: 12, 
-    legendRectWidth: 150
+    tooltipPadding: 10
     }
     this.data = _data;
     // this.config = _config;
@@ -63,9 +59,9 @@ class ChoroplethMap {
             .scale(vis.width);
 
     vis.colorScale = d3.scaleLinear()
-      .domain(d3.extent(vis.data.objects.counties.geometries, d => d.properties.ownhome))
-        .range(["#f7fcf5","#00441b"])
-        .interpolate(d3.interpolateHcl);
+            .domain([d3.min(vis.data.objects.counties.geometries, d => d.properties.ownhome), 0, d3.max(vis.data.objects.counties.geometries, d => d.properties.ownhome)])
+            .range(["red", "blue"])
+            .interpolate(d3.interpolateHcl);
 
     vis.path = d3.geoPath()
             .projection(vis.projection);
@@ -93,27 +89,20 @@ class ChoroplethMap {
                     });
 
       vis.counties
-                .on('mousemove', (d,event) => {
-                  console.log(d);
-                  console.log(event);
-                    const ownHome = d.properties.ownhome ? `<strong>${d.properties.ownhome.toFixed(2)}</strong>% home owners` : 'No data available'; 
-                    const tooltip = d3.select('#tooltip')
-                      .style('display', 'block')
-                      .style('left', (event.pageX + vis.config.tooltipPadding) + 'px')   
-                      .style('top', (event.pageY + vis.config.tooltipPadding) + 'px')
-                      .html(`
-                      <div class="tooltip-title">${d.properties.name}</div>
-                      <div>${ownHome}</div>
-                      `);
-
-                    const tooltipWidth = tooltip.node().getBoundingClientRect().width;
-                    const fontSize = Math.max(12, Math.min(20, tooltipWidth / 10));
-                    tooltip.style('font-size', fontSize + 'px');
-                    tooltip.select('.tooltip-title').style('font-size', (fontSize + 2) + 'px');
-                  })
-                  .on('mouseleave', () => {
-                    d3.select('#tooltip').style('display', 'none');
-                  });
+        .on('mousemove', (d, event) => {
+          const ownHome = d.properties.ownhome ? `<strong>${d.properties.ownhome.toFixed(2)}</strong>% difference between non-vets and vets poor` : 'No data available'; 
+          d3.select('#tooltip')
+            .style('display', 'block')
+            .style('left', (event.pageX + vis.config.tooltipPadding) + 'px')
+            .style('top', (event.pageY + vis.config.tooltipPadding) + 'px')
+            .html(`
+            <div class="tooltip-title">${d.properties.name}</div>
+            <div>${ownHome}</div>
+            `);
+          })
+          .on('mouseleave', () => {
+            d3.select('#tooltip').style('display', 'none');
+          });
 
 
 
