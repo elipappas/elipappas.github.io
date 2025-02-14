@@ -46,7 +46,9 @@ Promise.all([
     const fips = d.id.padStart(5, '0');
     d.properties.ownhome = peopleDataMap.get(fips) || 0;
     d.properties.pctVeterans = veteransDataMap.get(fips) || 0;
-    d.properties.ownhome = pctNonVetsPoorMap.get(fips) - pctVetsPoorMap.get(fips) || 0;
+    d.properties.poorVets = pctVetsPoorMap.get(fips) || 0;
+    d.properties.poorNonVets = pctNonVetsPoorMap.get(fips) || 0;
+    d.properties.ownhome = d.properties.poorNonVets - d.properties.poorVets || 0;
   });
 
   // Initialize visualizations

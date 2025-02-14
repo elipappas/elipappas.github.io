@@ -52,16 +52,20 @@ class ChoroplethMap {
       .attr('text-anchor', 'middle')
       .attr('class', 'title')
       .style('font-weight', 'bold') // Make the text bold
-      .text('Percentage of Home Ownership in the US');
+      .text('Poverty by Veteran Status');
   
     vis.projection = d3.geoAlbersUsa()
             .translate([vis.width /2 , vis.height / 2])
             .scale(vis.width);
 
     vis.colorScale = d3.scaleLinear()
-            .domain([d3.min(vis.data.objects.counties.geometries, d => d.properties.ownhome), 0, d3.max(vis.data.objects.counties.geometries, d => d.properties.ownhome)])
-            .range(["red", "blue"])
-            .interpolate(d3.interpolateHcl);
+      .domain([0, d3.max(vis.data.objects.counties.geometries, d => d.properties.ownhome)])
+      .range(["#fff5f0","#67000d"])
+      .interpolate(d3.interpolateHcl);
+    vis.colorScale2 = d3.scaleLinear()
+      .domain([0, d3.min(vis.data.objects.counties.geometries, d => d.properties.ownhome)])
+      .range(["#deebf7", "#08306b"])
+      .interpolate(d3.interpolateHcl); 
 
     vis.path = d3.geoPath()
             .projection(vis.projection);
@@ -82,7 +86,12 @@ class ChoroplethMap {
                 // .attr("class", "county-boundary")
                 .attr('fill', d => {
                       if (d.properties.ownhome) {
-                        return vis.colorScale(d.properties.ownhome);
+                        if (d.properties.ownhome > 0) {
+                          return vis.colorScale(d.properties.ownhome);
+                        }
+                        else {
+                          return vis.colorScale2(d.properties.ownhome);
+                        } 
                       } else {
                         return 'url(#lightstripe)';
                       }
@@ -90,21 +99,24 @@ class ChoroplethMap {
 
       vis.counties
         .on('mousemove', (d, event) => {
-          const ownHome = d.properties.ownhome ? `<strong>${d.properties.ownhome.toFixed(2)}</strong>% difference between non-vets and vets poor` : 'No data available'; 
+          const ownHome = d.properties.ownhome ? d.properties.ownhome.toFixed(2) : 'No data available'; 
+          const outputValue = ownHome >= 0 ? d.properties.poorNonVets : d.properties.poorVets;
+          const secondaryOutputValue = ownHome < 0 ? d.properties.poorNonVets : d.properties.poorVets;
+          const outputText = ownHome >= 0 ? '% of non-veterans in poverty' : '% of veterans in poverty';
+          const secondaryOutputText = ownHome < 0 ? '% of non-veterans in poverty' : '% of veterans in poverty';
           d3.select('#tooltip')
             .style('display', 'block')
             .style('left', (event.pageX + vis.config.tooltipPadding) + 'px')
             .style('top', (event.pageY + vis.config.tooltipPadding) + 'px')
             .html(`
             <div class="tooltip-title">${d.properties.name}</div>
-            <div>${ownHome}</div>
+            <div><strong>${outputValue.toFixed(2)}${outputText}</strong></div>
+            <div>${secondaryOutputValue.toFixed(2)}${secondaryOutputText}</div>
             `);
           })
           .on('mouseleave', () => {
             d3.select('#tooltip').style('display', 'none');
           });
-
-
 
     vis.g.append("path")
                 .datum(topojson.mesh(vis.us, vis.us.objects.states, function(a, b) { return a !== b; }))

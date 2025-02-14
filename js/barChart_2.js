@@ -77,7 +77,21 @@ class BarChart_2 {
             .attr("y", d => y(d.value))
             .attr("width", x.bandwidth())
             .attr("height", d => vis.height - y(d.value))
-            .attr("fill", d => d.color);
+            .attr("fill", d => d.color)
+            .on('mousemove', (event, d) => {
+                const value = Number(data[d].value)
+                d3.select('#tooltip-bar-2')
+                    .style('display', 'block')
+                    .style('left', (event.pageX + vis.config.tooltipPadding) + 'px')
+                    .style('top', (event.pageY + vis.config.tooltipPadding) + 'px')
+                    .html(`
+                        <div class="tooltip-bar-2-title">${data[d].name}</div>
+                        <div><strong>${value.toFixed(2)}%</strong></div>
+                    `);
+            })
+            .on('mouseleave', () => {
+                d3.select('#tooltip-bar-2').style('display', 'none');
+            });
 
             
     }

@@ -38,13 +38,8 @@ class BarChart {
 
         // data
         const data = [
-            // {name: "Poor Vets", value: nationalNonPoorVets},
-            // {name: "Total Vets", value: totalVets},
             {name: "Median Vet Income", value: nationalVetsIncome, color: "blue"},
-            {name: "Median Non-Vet Income", value: nationalNonVetsIncome, color: "red"},
-            // {name: "E", value: 20},
-            // {name: "F", value: 90},
-            // {name: "G", value: 55},
+            {name: "Median Non-Vet Income", value: nationalNonVetsIncome, color: "red"}
         ];
         
         // X axis
@@ -75,8 +70,20 @@ class BarChart {
             .attr("y", d => y(d.value))
             .attr("width", x.bandwidth())
             .attr("height", d => vis.height - y(d.value))
-            .attr("fill", d => d.color);
-
+            .attr("fill", d => d.color)
+            .on('mousemove', (event, d) => {
+                d3.select('#tooltip-bar')
+                    .style('display', 'block')
+                    .style('left', (event.pageX + vis.config.tooltipPadding) + 'px')
+                    .style('top', (event.pageY + vis.config.tooltipPadding) + 'px')
+                    .html(`
+                        <div class="tooltip-bar-title">${data[d].name}</div>
+                        <div><strong>${data[d].value}</strong> median income</div>
+                    `);
+            })
+            .on('mouseleave', () => {
+                d3.select('#tooltip-bar').style('display', 'none');
+            });
             
     }
 }
